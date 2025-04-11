@@ -45,7 +45,15 @@ To run ArgFuscator yourself, follow the following steps:
    tsc -w --project src/ --outfile gui/assets/js/main.js
    ```
 
-2. From the `gui/` folder, run:
+2. Copy and convert the models to serve them via Jekyll:
+
+   ```bash
+   cp -r models/ gui/assets/
+   python3 -m pip install pyyaml
+   python3 .github/workflows/json-transform.py
+   ```
+
+3. From the `gui/` folder, run:
 
    ```bash
    jekyll serve
