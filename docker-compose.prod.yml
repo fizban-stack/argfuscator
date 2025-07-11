@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  argfuscator:
+    build:
+      context: .
+      target: production
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - NGINX_HOST=localhost
+    networks:
+      - argfuscator-network
+
+networks:
+  argfuscator-network:
+    driver: bridge
