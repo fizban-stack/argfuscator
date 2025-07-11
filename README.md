@@ -1,5 +1,5 @@
 # ArgFuscator-docker
-**This is a fork of the original ArgFuscator.  It allows Argfuscator to be deployed in a docker container.
+**This is a fork of the original ArgFuscator.  It allows Argfuscator to be deployed in a docker container.**
 
 ArgFuscator is an open-source, stand-alone web application that helps generate obfuscated command lines for common system-native executables.
 
