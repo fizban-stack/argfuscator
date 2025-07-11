@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Development service
+  argfuscator-dev:
+    build:
+      context: .
+      target: development
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+      - bundle_cache:/usr/local/bundle
+      - node_modules:/app/node_modules
+    environment:
+      - JEKYLL_ENV=development
+    stdin_open: true
+    tty: true
+    networks:
+      - argfuscator-network
+
+  # Production service with nginx
+  argfuscator-prod:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8080:80"
+    networks:
+      - argfuscator-network
+
+  # Builder service (for building only)
+  argfuscator-build:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - .:/app
+      - build_output:/app/_site
+    command: >
+      sh -c "
+        if [ ! -f Gemfile ]; then
+          echo 'source \"https://rubygems.org\"' > Gemfile &&
+          echo 'gem \"jekyll\", \"~> 4.3\"' >> Gemfile &&
+          echo 'gem \"webrick\", \"~> 1.7\"' >> Gemfile
+        fi &&
+        bundle install &&
+        if [ -f 'src/tsconfig.json' ]; then
+          tsc --project src/ --outfile gui/assets/js/main.js
+        elif [ -d 'src' ]; then
+          tsc --project src/ --outDir gui/assets/js/
+        fi &&
+        if [ -d 'models' ]; then
+          cp -r models/ gui/assets/ &&
+          if [ -f '.github/workflows/json-transform.py' ]; then
+            python3 .github/workflows/json-transform.py
+          fi
+        fi &&
+        bundle exec jekyll build --destination _site
+      "
+    networks:
+      - argfuscator-network
+
+volumes:
+  bundle_cache:
+  node_modules:
+  build_output:
+
+networks:
+  argfuscator-network:
+    driver: bridge
