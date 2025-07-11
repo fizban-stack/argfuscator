@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Development service
   argfuscator-dev:
@@ -25,7 +23,7 @@ services:
       context: .
       target: production
     ports:
-      - "8080:80"
+      - "4000:80"
     networks:
       - argfuscator-network
 
@@ -39,24 +37,33 @@ services:
       - build_output:/app/_site
     command: >
       sh -c "
-        if [ ! -f Gemfile ]; then
-          echo 'source \"https://rubygems.org\"' > Gemfile &&
-          echo 'gem \"jekyll\", \"~> 4.3\"' >> Gemfile &&
-          echo 'gem \"webrick\", \"~> 1.7\"' >> Gemfile
-        fi &&
-        bundle install &&
+        cd /app &&
         if [ -f 'src/tsconfig.json' ]; then
+          echo 'Compiling TypeScript...' &&
           tsc --project src/ --outfile gui/assets/js/main.js
         elif [ -d 'src' ]; then
+          echo 'Compiling TypeScript to gui/assets/js/...' &&
           tsc --project src/ --outDir gui/assets/js/
         fi &&
         if [ -d 'models' ]; then
+          echo 'Processing models...' &&
           cp -r models/ gui/assets/ &&
           if [ -f '.github/workflows/json-transform.py' ]; then
             python3 .github/workflows/json-transform.py
           fi
         fi &&
-        bundle exec jekyll build --destination _site
+        cd gui &&
+        if [ ! -f Gemfile ]; then
+          echo 'Creating Gemfile...' &&
+          echo 'source \"https://rubygems.org\"' > Gemfile &&
+          echo 'gem \"jekyll\", \"~> 4.3\"' >> Gemfile &&
+          echo 'gem \"webrick\", \"~> 1.7\"' >> Gemfile &&
+          echo 'gem \"kramdown-parser-gfm\"' >> Gemfile
+        fi &&
+        echo 'Installing Jekyll dependencies...' &&
+        bundle install &&
+        echo 'Building Jekyll site...' &&
+        bundle exec jekyll build --destination ../_site
       "
     networks:
       - argfuscator-network
